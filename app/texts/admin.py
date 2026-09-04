@@ -1,5 +1,7 @@
 from typing import Any
 
+from app.texts.emoji import BELL, GEAR, LOGO, MESSAGE, PREMIUM
+
 
 def _plural_people(count: int) -> str:
     tail = count % 10
@@ -12,12 +14,12 @@ def _plural_people(count: int) -> str:
 
 
 WELCOME = (
-    "🛡 <b>Ви адмін RateMat</b>\n\n"
-    "Доступні розділи керування на клавіатурі нижче:\n"
+    f"{LOGO} <b>Ви адмін RateMat</b>\n\n"
+    f"{GEAR} Доступні розділи керування на клавіатурі нижче:\n"
     "• 🎥 Переглянути верифікацію — черга відеокружків на підтвердження;\n"
     "• 🚩 Скарги — відкриті звернення користувачів;\n"
     "• 📊 Аналітика — поточні показники бота.\n\n"
-    "Сповіщення про чергу приходять лише коли вона з'являється — без спаму."
+    f"{BELL} Сповіщення про чергу приходять лише коли вона з'являється — без спаму."
 )
 
 VERIFICATION_EMPTY = "✅ Черга верифікації порожня. Нових кружечків немає."
@@ -26,7 +28,7 @@ COMPLAINTS_EMPTY = "✅ Відкритих скарг немає."
 
 def queue_alert(count: int) -> str:
     return (
-        f"🔔 <b>Черга верифікації</b>\n\n"
+        f"{BELL} <b>Черга верифікації</b>\n\n"
         f"Зараз {count} {_plural_people(count)} чекають на перевірку.\n"
         f"Відкрий «🎥 Переглянути верифікацію», щоб опрацювати."
     )
@@ -62,6 +64,10 @@ def auto_shadow_reason(reporter_count: int) -> str:
     )
 
 
+def anon_complaint_reason(body: str) -> str:
+    return f"{MESSAGE} Скарга на анонімне повідомлення:\n\n{body}"
+
+
 def complaint_card(complaint: dict[str, Any], position: int, total: int) -> str:
     username = complaint.get("target_username")
     target_id = complaint.get("target_telegram_id")
@@ -87,7 +93,7 @@ def complaint_card(complaint: dict[str, Any], position: int, total: int) -> str:
 def analytics_report(data: dict[str, Any]) -> str:
     by_status = data["by_status"]
     return (
-        "📊 <b>Аналітика RateMat</b>\n\n"
+        f"{GEAR} <b>Аналітика RateMat</b>\n\n"
         f"Усього користувачів: <b>{data['total']}</b>\n"
         f"Нових за 24 год: <b>{data['new_24h']}</b>\n"
         f"Нових за 7 днів: <b>{data['new_7d']}</b>\n\n"
@@ -99,5 +105,8 @@ def analytics_report(data: dict[str, Any]) -> str:
         f"• відхилені: {by_status['rejected']}\n"
         f"• заблоковані: {by_status['banned']}\n"
         f"• тіньовий бан: {data['shadow_banned']}\n\n"
+        f"{PREMIUM} <b>Преміум</b>\n"
+        f"• активних підписок: {data['premium_users']}\n"
+        f"• зароблено зірок: {data['stars_earned']} ⭐\n\n"
         f"Відкритих скарг: <b>{data['open_complaints']}</b>"
     )

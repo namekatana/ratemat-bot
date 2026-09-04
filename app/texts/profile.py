@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Any
 
+from app.services.anon import BODY_MAX, BODY_MIN
 from app.services.complaints import REASON_MAX, REASON_MIN
 from app.services.premium import PREMIUM_DAYS, PREMIUM_STARS
+from app.texts.emoji import GEAR, HAND, LOGO, MESSAGE, PREMIUM
 from app.services.profiles import (
     AGE_MAX,
     AGE_MIN,
@@ -17,13 +19,13 @@ _GENDER_LABELS = {"male": "Чоловік", "female": "Жінка"}
 _RATING_SLOTS = 5
 
 VERIFIED_NEEDS_PROFILE = (
-    "🎉 <b>Верифікацію пройдено!</b>\n\n"
+    f"{LOGO} <b>Верифікацію пройдено!</b>\n\n"
     "Тепер створи анкету — це займе одну хвилину. "
     "Після цього ти потрапиш до стрічки та зможеш переглядати й оцінювати інші анкети."
 )
 
 CREATE_INTRO = (
-    "📝 <b>Створення анкети</b>\n\n"
+    f"{GEAR} <b>Створення анкети</b>\n\n"
     "Заповнимо п'ять коротких кроків: ім'я, вік, стать, фото та опис. "
     "Анкету бачитимуть інші користувачі у стрічці й зможуть поставити оцінку від 1 до 5 зірочок.\n"
     "Переробити анкету можна будь-коли кнопкою «✏️ Змінити анкету».\n\n"
@@ -114,7 +116,34 @@ REPORT_BAD = (
 )
 REPORT_SAVED = "✅ Скаргу надіслано. Показуємо наступну анкету."
 
-MENU_GREETING = "👋 З поверненням! Керування — на клавіатурі нижче."
+ANON_ASK = (
+    f"{MESSAGE} <b>Анонімне повідомлення</b>\n\n"
+    "Напиши текст — його надішлють цій людині анонімно, без твого імені. "
+    "Відповісти на нього не можна.\n"
+    "Щоб не надсилати, натисни «⬅️ Головне меню».\n\n"
+    f"<blockquote>📏 Обмеження: від {BODY_MIN} до {BODY_MAX} символів</blockquote>"
+)
+ANON_BAD = (
+    "⚠️ Повідомлення не підходить.\n\n"
+    f"<blockquote>📏 Потрібно: текстом, від {BODY_MIN} до {BODY_MAX} символів</blockquote>"
+    "Спробуй ще раз або натисни «⬅️ Головне меню»."
+)
+ANON_SENT = "✅ Повідомлення надіслано анонімно."
+ANON_BLOCKED_SEND = "🚫 Ця людина недоступна для анонімних повідомлень."
+ANON_LIMIT = "⏳ Ти вичерпав ліміт анонімних повідомлень на сьогодні. Спробуй завтра."
+ANON_SELF = "🙂 Це твоя анкета."
+ANON_BLOCK_DONE = "🚫 Відправника заблоковано. Він більше не зможе тобі писати."
+ANON_REPORT_DONE = "🚩 Скаргу надіслано модератору."
+ANON_ACTION_STALE = "Це повідомлення вже неактуальне."
+
+
+def anon_received(body: str) -> str:
+    return (
+        f"{MESSAGE} <b>Анонімне повідомлення</b>\n\n"
+        f"<blockquote>{body}</blockquote>"
+    )
+
+MENU_GREETING = f"{HAND} З поверненням! Керування — на клавіатурі нижче."
 
 NO_PROFILE = "У тебе ще немає анкети. Натисни «Створити анкету», щоб почати."
 
@@ -135,7 +164,7 @@ def _rating_line(votes: int, average: float) -> str:
 
 
 def _profile_body(profile: dict[str, Any], is_premium: bool = False) -> str:
-    badge = "💎 " if is_premium else ""
+    badge = f"{PREMIUM} " if is_premium else ""
     return (
         f"{badge}<b>{profile['name']}</b>, {profile['age']} · {_gender_label(profile['gender'])}\n\n"
         f"📝 <b>Про себе</b>\n"
@@ -172,17 +201,18 @@ def my_profile_caption(
         f"⭐ <b>Рейтинг</b>\n{_rating_line(votes, average)}"
     )
     if premium_until is not None:
-        text += f"\n\n💎 Преміум активний до {_premium_date(premium_until)}"
+        text += f"\n\n{PREMIUM} Преміум активний до {_premium_date(premium_until)}"
     return text
 
 
 PREMIUM_PITCH = (
-    "💎 <b>RateMat Преміум</b>\n"
+    f"{PREMIUM} <b>RateMat Преміум</b>\n"
     f"<b>{PREMIUM_STARS} ⭐ · {PREMIUM_DAYS} днів</b>\n\n"
     "<b>Що ти отримуєш:</b>\n\n"
     "✦ <b>Пріоритет у стрічці.</b> Твоя анкета йде першою, поки інші стоять у черзі. "
     "Більше показів — більше оцінок.\n\n"
-    "✦ <b>Значок 💎 на анкеті.</b> Одразу вирізняє тебе серед десятків звичайних профілів.\n\n"
+    f"✦ <b>Помітна позначка {PREMIUM} на анкеті.</b> Одразу вирізняє тебе "
+    "серед десятків звичайних профілів.\n\n"
     "✦ <b>Список тих, хто тебе оцінив.</b> Не лише середній бал, а конкретні імена та їхні оцінки.\n\n"
     "<b>Чому це працює:</b> перші секунди вирішують усе. Анкета зверху збирає в рази більше "
     "реакцій, ніж та, що загубилась унизу стрічки.\n\n"
@@ -198,7 +228,7 @@ PREMIUM_INVOICE_DESC = (
 
 def premium_extend(until: datetime) -> str:
     return (
-        f"💎 <b>RateMat Преміум</b>\n\n"
+        f"{PREMIUM} <b>RateMat Преміум</b>\n\n"
         f"У тебе вже активний Преміум до <b>{_premium_date(until)}</b>.\n"
         f"Нова оплата додасть ще {PREMIUM_DAYS} днів зверху — час не згорить.\n\n"
         "Оплата — кнопкою нижче 👇"
@@ -206,20 +236,27 @@ def premium_extend(until: datetime) -> str:
 
 
 def premium_thanks(until: datetime) -> str:
-    return f"✅ Дякуємо! Преміум активний до {_premium_date(until)}."
+    return (
+        f"{PREMIUM} <b>Дякуємо за покупку!</b>\n\n"
+        f"Тепер ти — Преміум-користувач RateMat до <b>{_premium_date(until)}</b>.\n\n"
+        "<b>Тобі доступно:</b>\n"
+        "✦ Пріоритет у стрічці — твоя анкета показується першою\n"
+        f"✦ Помітна позначка {PREMIUM} на анкеті\n"
+        "✦ Список тих, хто тебе оцінив — у розділі «👤 Моя анкета»"
+    )
 
 
 def premium_active(until: datetime) -> str:
-    return f"💎 Преміум активний до {_premium_date(until)}."
+    return f"{PREMIUM} Преміум активний до {_premium_date(until)}."
 
 
 def raters_list(items: list[dict[str, Any]]) -> str:
     if not items:
-        return "💎 <b>Хто тебе оцінив</b>\n\nПоки що ніхто."
+        return f"{PREMIUM} <b>Хто тебе оцінив</b>\n\nПоки що ніхто."
     lines = []
     for item in items:
         username = item["username"]
         handle = f"@{username}" if username else "Без username"
         score = item["score"]
         lines.append(f"{handle} — {_stars(score)} ({score}/5)")
-    return "💎 <b>Хто тебе оцінив</b>\n\n" + "\n".join(lines)
+    return f"{PREMIUM} <b>Хто тебе оцінив</b>\n\n" + "\n".join(lines)
