@@ -16,6 +16,8 @@ GENDER_PREFIX = "pg"
 
 FEED_BACK = "⬅️ Головне меню"
 FEED_REPORT = "🚩 Поскаржитися"
+ANON_SEND = "✉️ Написати анонімно"
+ANON_PREFIX = "am"
 RATING_LABELS = {
     "⭐": 1,
     "⭐⭐": 2,
@@ -42,7 +44,7 @@ def feed_menu() -> ReplyKeyboardMarkup:
         KeyboardButton(text="⭐⭐⭐"),
     )
     builder.row(KeyboardButton(text="⭐⭐⭐⭐"), KeyboardButton(text="⭐⭐⭐⭐⭐"))
-    builder.row(KeyboardButton(text=FEED_REPORT))
+    builder.row(KeyboardButton(text=ANON_SEND), KeyboardButton(text=FEED_REPORT))
     builder.row(KeyboardButton(text=FEED_BACK))
     return builder.as_markup(resize_keyboard=True)
 
@@ -51,6 +53,23 @@ def reason_menu() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
     builder.row(KeyboardButton(text=FEED_BACK))
     return builder.as_markup(resize_keyboard=True)
+
+
+def anon_actions(message_id: int) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text="🚫 Заблокувати відправника",
+            callback_data=f"{ANON_PREFIX}:block:{message_id}",
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text="🚩 Поскаржитися",
+            callback_data=f"{ANON_PREFIX}:report:{message_id}",
+        )
+    )
+    return builder.as_markup()
 
 
 def create_profile() -> InlineKeyboardMarkup:

@@ -12,3 +12,4 @@ class ProfileForm(StatesGroup):
 class FeedForm(StatesGroup):
     viewing = State()
     complaint_reason = State()
+    anon_message = State()
