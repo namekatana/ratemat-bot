@@ -34,6 +34,18 @@ def list_rated_by(rater_telegram_id: int) -> list[dict[str, Any]]:
     return response.data
 
 
+def list_raters_of(target_telegram_id: int) -> list[dict[str, Any]]:
+    response = (
+        get_client()
+        .table(TABLE)
+        .select("rater_telegram_id, score, updated_at")
+        .eq("target_telegram_id", target_telegram_id)
+        .order("updated_at", desc=True)
+        .execute()
+    )
+    return response.data
+
+
 def score_for(rater_telegram_id: int, target_telegram_id: int) -> int | None:
     response = (
         get_client()

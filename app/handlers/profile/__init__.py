@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from app.handlers.profile import creation, feed, menu, start
+from app.handlers.profile import creation, feed, menu, premium, start
 
 
 def build_profile_router() -> Router:
@@ -8,5 +8,6 @@ def build_profile_router() -> Router:
     router.include_router(start.router)
     router.include_router(creation.router)
     router.include_router(menu.router)
+    router.include_router(premium.router)
     router.include_router(feed.router)
     return router

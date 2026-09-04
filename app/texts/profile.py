@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import Any
 
 from app.services.complaints import REASON_MAX, REASON_MIN
+from app.services.premium import PREMIUM_DAYS, PREMIUM_STARS
 from app.services.profiles import (
     AGE_MAX,
     AGE_MIN,
@@ -132,16 +134,21 @@ def _rating_line(votes: int, average: float) -> str:
     return f"{_stars(average)} · {average:.1f}/5 · {votes}"
 
 
-def _profile_body(profile: dict[str, Any]) -> str:
+def _profile_body(profile: dict[str, Any], is_premium: bool = False) -> str:
+    badge = "💎 " if is_premium else ""
     return (
-        f"<b>{profile['name']}</b>, {profile['age']} · {_gender_label(profile['gender'])}\n\n"
+        f"{badge}<b>{profile['name']}</b>, {profile['age']} · {_gender_label(profile['gender'])}\n\n"
         f"📝 <b>Про себе</b>\n"
         f"<blockquote>{profile['description']}</blockquote>"
     )
 
 
-def profile_caption(profile: dict[str, Any], previous_score: int | None = None) -> str:
-    text = _profile_body(profile)
+def profile_caption(
+    profile: dict[str, Any],
+    previous_score: int | None = None,
+    is_premium: bool = False,
+) -> str:
+    text = _profile_body(profile, is_premium)
     if previous_score is not None:
         text += f"\n\n🔁 Твоя попередня оцінка: {_stars(previous_score)} ({previous_score}/5)"
     else:
@@ -149,9 +156,70 @@ def profile_caption(profile: dict[str, Any], previous_score: int | None = None) 
     return text
 
 
-def my_profile_caption(profile: dict[str, Any], votes: int, average: float) -> str:
-    return (
+def _premium_date(until: datetime) -> str:
+    return until.strftime("%d.%m.%Y")
+
+
+def my_profile_caption(
+    profile: dict[str, Any],
+    votes: int,
+    average: float,
+    premium_until: datetime | None = None,
+) -> str:
+    text = (
         "👤 <b>Твоя анкета</b>\n\n"
-        f"{_profile_body(profile)}\n\n"
+        f"{_profile_body(profile, premium_until is not None)}\n\n"
         f"⭐ <b>Рейтинг</b>\n{_rating_line(votes, average)}"
     )
+    if premium_until is not None:
+        text += f"\n\n💎 Преміум активний до {_premium_date(premium_until)}"
+    return text
+
+
+PREMIUM_PITCH = (
+    "💎 <b>RateMat Преміум</b>\n"
+    f"<b>{PREMIUM_STARS} ⭐ · {PREMIUM_DAYS} днів</b>\n\n"
+    "<b>Що ти отримуєш:</b>\n\n"
+    "✦ <b>Пріоритет у стрічці.</b> Твоя анкета йде першою, поки інші стоять у черзі. "
+    "Більше показів — більше оцінок.\n\n"
+    "✦ <b>Значок 💎 на анкеті.</b> Одразу вирізняє тебе серед десятків звичайних профілів.\n\n"
+    "✦ <b>Список тих, хто тебе оцінив.</b> Не лише середній бал, а конкретні імена та їхні оцінки.\n\n"
+    "<b>Чому це працює:</b> перші секунди вирішують усе. Анкета зверху збирає в рази більше "
+    "реакцій, ніж та, що загубилась унизу стрічки.\n\n"
+    "<blockquote>Тебе оцінюють люди, а не алгоритм. Дай їм побачити тебе першими.</blockquote>\n\n"
+    "Оплата — кнопкою нижче 👇"
+)
+
+PREMIUM_INVOICE_DESC = (
+    f"Преміум на {PREMIUM_DAYS} днів: пріоритет у стрічці, значок 💎 "
+    "і список тих, хто тебе оцінив."
+)
+
+
+def premium_extend(until: datetime) -> str:
+    return (
+        f"💎 <b>RateMat Преміум</b>\n\n"
+        f"У тебе вже активний Преміум до <b>{_premium_date(until)}</b>.\n"
+        f"Нова оплата додасть ще {PREMIUM_DAYS} днів зверху — час не згорить.\n\n"
+        "Оплата — кнопкою нижче 👇"
+    )
+
+
+def premium_thanks(until: datetime) -> str:
+    return f"✅ Дякуємо! Преміум активний до {_premium_date(until)}."
+
+
+def premium_active(until: datetime) -> str:
+    return f"💎 Преміум активний до {_premium_date(until)}."
+
+
+def raters_list(items: list[dict[str, Any]]) -> str:
+    if not items:
+        return "💎 <b>Хто тебе оцінив</b>\n\nПоки що ніхто."
+    lines = []
+    for item in items:
+        username = item["username"]
+        handle = f"@{username}" if username else "Без username"
+        score = item["score"]
+        lines.append(f"{handle} — {_stars(score)} ({score}/5)")
+    return "💎 <b>Хто тебе оцінив</b>\n\n" + "\n".join(lines)

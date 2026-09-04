@@ -9,6 +9,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 BROWSE_PROFILES = "📷 Дивитись анкети"
 MY_PROFILE = "👤 Моя анкета"
 EDIT_PROFILE = "✏️ Змінити анкету"
+PREMIUM = "💎 Преміум"
 
 CREATE_PROFILE = "profile:create"
 GENDER_PREFIX = "pg"
@@ -29,6 +30,7 @@ def main_menu() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
     builder.row(KeyboardButton(text=BROWSE_PROFILES))
     builder.row(KeyboardButton(text=MY_PROFILE), KeyboardButton(text=EDIT_PROFILE))
+    builder.row(KeyboardButton(text=PREMIUM))
     return builder.as_markup(resize_keyboard=True)
 
 
