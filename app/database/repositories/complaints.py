@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import Any
 
 from app.database.client import get_client
@@ -109,32 +108,15 @@ def count_open() -> int:
     return response.count or 0
 
 
-def resolve(complaint_id: int, status: str, admin_id: int) -> dict[str, Any]:
-    payload = {
-        "status": status,
-        "resolved_by": admin_id,
-        "resolved_at": datetime.now(timezone.utc).isoformat(),
-    }
-    response = (
-        get_client().table(TABLE).update(payload).eq("id", complaint_id).execute()
-    )
-    return response.data[0]
+def delete(complaint_id: int) -> None:
+    get_client().table(TABLE).delete().eq("id", complaint_id).execute()
 
 
-def resolve_open_for_target(
-    target_telegram_id: int, status: str, admin_id: int
-) -> list[dict[str, Any]]:
-    payload = {
-        "status": status,
-        "resolved_by": admin_id,
-        "resolved_at": datetime.now(timezone.utc).isoformat(),
-    }
-    response = (
+def delete_for_target(target_telegram_id: int) -> None:
+    (
         get_client()
         .table(TABLE)
-        .update(payload)
+        .delete()
         .eq("target_telegram_id", target_telegram_id)
-        .eq("status", "open")
         .execute()
     )
-    return response.data

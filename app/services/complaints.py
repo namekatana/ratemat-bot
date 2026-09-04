@@ -89,39 +89,24 @@ async def open_count() -> int:
 
 
 async def ban(complaint_id: int, target_telegram_id: int, admin_id: int) -> None:
-    await asyncio.to_thread(repo.resolve, complaint_id, "resolved_ban", admin_id)
-    if target_telegram_id:
-        await asyncio.to_thread(
-            users_repo.set_status, target_telegram_id, "banned"
-        )
-        await asyncio.to_thread(
-            profiles_repo.set_active, target_telegram_id, False
-        )
-        await asyncio.to_thread(
-            repo.resolve_open_for_target,
-            target_telegram_id,
-            "resolved_ban",
-            admin_id,
-        )
+    if not target_telegram_id:
+        await asyncio.to_thread(repo.delete, complaint_id)
+        return
+    await asyncio.to_thread(users_repo.set_status, target_telegram_id, "banned")
+    await asyncio.to_thread(profiles_repo.set_active, target_telegram_id, False)
+    await asyncio.to_thread(repo.delete_for_target, target_telegram_id)
 
 
 async def restore(
     complaint_id: int, target_telegram_id: int, admin_id: int
 ) -> None:
     if not target_telegram_id:
-        await asyncio.to_thread(
-            repo.resolve, complaint_id, "resolved_dismiss", admin_id
-        )
+        await asyncio.to_thread(repo.delete, complaint_id)
         return
     await asyncio.to_thread(users_repo.clear_shadow_ban, target_telegram_id)
     await asyncio.to_thread(profiles_repo.set_active, target_telegram_id, True)
-    await asyncio.to_thread(
-        repo.resolve_open_for_target,
-        target_telegram_id,
-        "resolved_dismiss",
-        admin_id,
-    )
+    await asyncio.to_thread(repo.delete_for_target, target_telegram_id)
 
 
 async def dismiss(complaint_id: int, admin_id: int) -> None:
-    await asyncio.to_thread(repo.resolve, complaint_id, "resolved_dismiss", admin_id)
+    await asyncio.to_thread(repo.delete, complaint_id)
