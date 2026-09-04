@@ -150,6 +150,18 @@ def list_premium_ids(telegram_ids: list[int]) -> list[int]:
     return [row["telegram_id"] for row in response.data]
 
 
+def count_premium() -> int:
+    now = datetime.now(timezone.utc).isoformat()
+    response = (
+        get_client()
+        .table(TABLE)
+        .select("id", count="exact")
+        .gt("premium_until", now)
+        .execute()
+    )
+    return response.count or 0
+
+
 def set_premium_until(telegram_id: int, until_iso: str) -> dict[str, Any]:
     response = (
         get_client()

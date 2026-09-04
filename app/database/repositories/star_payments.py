@@ -17,6 +17,11 @@ def exists(charge_id: str) -> bool:
     return bool(response.data)
 
 
+def total_stars() -> int:
+    response = get_client().table(TABLE).select("stars").execute()
+    return sum(row["stars"] for row in response.data)
+
+
 def create(
     telegram_id: int, charge_id: str, stars: int, payload: str | None
 ) -> dict[str, Any]:

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.database.repositories import complaints as complaints_repo
+from app.database.repositories import star_payments as star_payments_repo
 from app.database.repositories import users as users_repo
 
 _STATUSES = (
@@ -23,6 +24,8 @@ def _collect() -> dict[str, Any]:
         "total": users_repo.count_all(),
         "by_status": {s: users_repo.count_by_status(s) for s in _STATUSES},
         "shadow_banned": users_repo.count_shadow_banned(),
+        "premium_users": users_repo.count_premium(),
+        "stars_earned": star_payments_repo.total_stars(),
         "open_complaints": complaints_repo.count_open(),
         "new_24h": users_repo.count_created_since(day_ago),
         "new_7d": users_repo.count_created_since(week_ago),
