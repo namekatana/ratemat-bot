@@ -2,6 +2,7 @@ from typing import Iterable
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
+from aiogram.types import Message
 
 
 async def delete_messages(
@@ -12,3 +13,10 @@ async def delete_messages(
             await bot.delete_message(chat_id, message_id)
         except TelegramAPIError:
             pass
+
+
+async def delete_message(message: Message) -> None:
+    try:
+        await message.delete()
+    except TelegramAPIError:
+        pass
