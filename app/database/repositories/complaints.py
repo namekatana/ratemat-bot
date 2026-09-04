@@ -24,6 +24,52 @@ def create(
     return response.data[0]
 
 
+def create_auto_shadow(
+    target_telegram_id: int,
+    target_username: str | None,
+    target_photo_file_id: str | None,
+    reason: str,
+) -> dict[str, Any]:
+    payload = {
+        "reporter_telegram_id": 0,
+        "target_telegram_id": target_telegram_id,
+        "target_username": target_username,
+        "target_photo_file_id": target_photo_file_id,
+        "reason": reason,
+        "kind": "auto_shadow",
+    }
+    response = get_client().table(TABLE).insert(payload).execute()
+    return response.data[0]
+
+
+def count_recent_reporters(target_telegram_id: int, since_iso: str) -> int:
+    response = (
+        get_client()
+        .table(TABLE)
+        .select("reporter_telegram_id")
+        .eq("target_telegram_id", target_telegram_id)
+        .eq("status", "open")
+        .eq("kind", "user")
+        .gte("created_at", since_iso)
+        .execute()
+    )
+    return len({row["reporter_telegram_id"] for row in response.data})
+
+
+def has_open_auto_shadow(target_telegram_id: int) -> bool:
+    response = (
+        get_client()
+        .table(TABLE)
+        .select("id")
+        .eq("target_telegram_id", target_telegram_id)
+        .eq("kind", "auto_shadow")
+        .eq("status", "open")
+        .limit(1)
+        .execute()
+    )
+    return bool(response.data)
+
+
 def open_for_target(
     reporter_telegram_id: int, target_telegram_id: int
 ) -> dict[str, Any] | None:
@@ -73,3 +119,22 @@ def resolve(complaint_id: int, status: str, admin_id: int) -> dict[str, Any]:
         get_client().table(TABLE).update(payload).eq("id", complaint_id).execute()
     )
     return response.data[0]
+
+
+def resolve_open_for_target(
+    target_telegram_id: int, status: str, admin_id: int
+) -> list[dict[str, Any]]:
+    payload = {
+        "status": status,
+        "resolved_by": admin_id,
+        "resolved_at": datetime.now(timezone.utc).isoformat(),
+    }
+    response = (
+        get_client()
+        .table(TABLE)
+        .update(payload)
+        .eq("target_telegram_id", target_telegram_id)
+        .eq("status", "open")
+        .execute()
+    )
+    return response.data

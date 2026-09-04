@@ -43,6 +43,17 @@ def upsert(
     return response.data[0]
 
 
+def set_active(telegram_id: int, active: bool) -> Optional[dict[str, Any]]:
+    response = (
+        get_client()
+        .table(TABLE)
+        .update({"is_active": active})
+        .eq("telegram_id", telegram_id)
+        .execute()
+    )
+    return response.data[0] if response.data else None
+
+
 def list_active_excluding(
     telegram_id: int, excluded_ids: list[int], limit: int
 ) -> list[dict[str, Any]]:

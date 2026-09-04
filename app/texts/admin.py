@@ -54,12 +54,29 @@ def verification_card(user: dict[str, Any], position: int, total: int) -> str:
     )
 
 
+def auto_shadow_reason(reporter_count: int) -> str:
+    return (
+        f"На анкету поскаржилися {reporter_count} {_plural_people(reporter_count)} "
+        f"за 24 години. Анкету автоматично приховано зі стрічки.\n"
+        f"Підтвердь бан або зніми тіньовий бан."
+    )
+
+
 def complaint_card(complaint: dict[str, Any], position: int, total: int) -> str:
     username = complaint.get("target_username")
     target_id = complaint.get("target_telegram_id")
+    handle = f"@{username}" if username else "—"
+    if complaint.get("kind") == "auto_shadow":
+        return (
+            f"🕶 <b>Автоматичне тіньове блокування</b> · {position}/{total}\n\n"
+            f"На кого: {handle}\n"
+            f"Telegram ID: <code>{target_id or '—'}</code>\n"
+            f"Створено: {complaint.get('created_at', '—')}\n\n"
+            f"{complaint['reason']}"
+        )
     return (
         f"🚩 <b>Скарга</b> · {position}/{total}\n\n"
-        f"На кого: {f'@{username}' if username else '—'}\n"
+        f"На кого: {handle}\n"
         f"Telegram ID: <code>{target_id or '—'}</code>\n"
         f"Від кого: <code>{complaint['reporter_telegram_id']}</code>\n"
         f"Створено: {complaint.get('created_at', '—')}\n\n"
@@ -80,6 +97,7 @@ def analytics_report(data: dict[str, Any]) -> str:
         f"• у черзі на перевірку: {by_status['pending_review']}\n"
         f"• підтверджені: {by_status['verified']}\n"
         f"• відхилені: {by_status['rejected']}\n"
-        f"• заблоковані: {by_status['banned']}\n\n"
+        f"• заблоковані: {by_status['banned']}\n"
+        f"• тіньовий бан: {data['shadow_banned']}\n\n"
         f"Відкритих скарг: <b>{data['open_complaints']}</b>"
     )

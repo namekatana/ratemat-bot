@@ -11,7 +11,7 @@ from app.keyboards.admin_inline import (
     COMPLAINT_PREV,
 )
 from app.keyboards.reply import REVIEW_COMPLAINTS
-from app.services.complaints import ban, dismiss
+from app.services.complaints import ban, dismiss, restore
 from app.texts import moderation as user_texts
 
 router = Router(name="admin_complaints")
@@ -49,6 +49,14 @@ async def ban_target(callback: CallbackQuery, state: FSMContext) -> None:
             pass
     await show_complaint(callback.bot, callback.message.chat.id, state)
     await callback.answer("Заблоковано")
+
+
+@router.callback_query(F.data.startswith(f"{COMPLAINT_PREFIX}:unshadow:"), IsAdmin())
+async def restore_target(callback: CallbackQuery, state: FSMContext) -> None:
+    _, _, complaint_id, target_id = callback.data.split(":")
+    await restore(int(complaint_id), int(target_id), callback.from_user.id)
+    await show_complaint(callback.bot, callback.message.chat.id, state)
+    await callback.answer("Тіньовий бан знято")
 
 
 @router.callback_query(F.data.startswith(f"{COMPLAINT_PREFIX}:dismiss:"), IsAdmin())

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from app.database.client import get_client
@@ -82,6 +83,78 @@ def set_status(telegram_id: int, status: str) -> dict[str, Any]:
         get_client()
         .table(TABLE)
         .update({"verification_status": status})
+        .eq("telegram_id", telegram_id)
+        .execute()
+    )
+    return response.data[0]
+
+
+def set_shadow_ban(telegram_id: int) -> dict[str, Any]:
+    response = (
+        get_client()
+        .table(TABLE)
+        .update({"shadow_banned_at": datetime.now(timezone.utc).isoformat()})
+        .eq("telegram_id", telegram_id)
+        .execute()
+    )
+    return response.data[0]
+
+
+def clear_shadow_ban(telegram_id: int) -> dict[str, Any]:
+    response = (
+        get_client()
+        .table(TABLE)
+        .update({"shadow_banned_at": None})
+        .eq("telegram_id", telegram_id)
+        .execute()
+    )
+    return response.data[0]
+
+
+def count_shadow_banned() -> int:
+    response = (
+        get_client()
+        .table(TABLE)
+        .select("id", count="exact")
+        .not_.is_("shadow_banned_at", "null")
+        .execute()
+    )
+    return response.count or 0
+
+
+def list_by_ids(telegram_ids: list[int]) -> list[dict[str, Any]]:
+    if not telegram_ids:
+        return []
+    response = (
+        get_client()
+        .table(TABLE)
+        .select("telegram_id, username")
+        .in_("telegram_id", telegram_ids)
+        .execute()
+    )
+    return response.data
+
+
+def list_premium_ids(telegram_ids: list[int]) -> list[int]:
+    if not telegram_ids:
+        return []
+    now = datetime.now(timezone.utc).isoformat()
+    response = (
+        get_client()
+        .table(TABLE)
+        .select("telegram_id")
+        .in_("telegram_id", telegram_ids)
+        .gt("premium_until", now)
+        .execute()
+    )
+    return [row["telegram_id"] for row in response.data]
+
+
+def set_premium_until(telegram_id: int, until_iso: str) -> dict[str, Any]:
+    response = (
+        get_client()
+        .table(TABLE)
+        .update({"premium_until": until_iso})
         .eq("telegram_id", telegram_id)
         .execute()
     )

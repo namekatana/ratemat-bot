@@ -57,6 +57,7 @@ async def show_complaint(bot: Bot, chat_id: int, state: FSMContext) -> None:
         complaint["id"],
         complaint.get("target_telegram_id") or 0,
         len(queue) > 1,
+        complaint.get("kind", "user"),
     )
     photo_file_id = complaint.get("target_photo_file_id")
     if photo_file_id:

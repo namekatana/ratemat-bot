@@ -22,6 +22,7 @@ def _collect() -> dict[str, Any]:
     return {
         "total": users_repo.count_all(),
         "by_status": {s: users_repo.count_by_status(s) for s in _STATUSES},
+        "shadow_banned": users_repo.count_shadow_banned(),
         "open_complaints": complaints_repo.count_open(),
         "new_24h": users_repo.count_created_since(day_ago),
         "new_7d": users_repo.count_created_since(week_ago),
